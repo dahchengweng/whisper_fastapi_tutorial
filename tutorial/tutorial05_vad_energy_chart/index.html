@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>Tutorial 05 - VAD 能量與門檻圖表</title>
+</head>
+<body style="font-family: sans-serif; max-width: 650px; margin: 40px auto;">
+    <h2>📊 Tutorial 05：VAD 能量計算與門檻視覺化</h2>
+    <div>
+        <label>Threshold 門檻：<strong id="tVal" style="color:red;">0.5</strong></label><br>
+        <input type="range" id="thresh" min="0.1" max="0.9" step="0.05" value="0.5"
+               oninput="document.getElementById('tVal').innerText = this.value">
+    </div>
+    <br>
+    <button id="btnStart">🔴 開始錄音</button>
+    <button id="btnStop" disabled>⏹️ 停止並分析</button>
+    <p id="status">狀態：待機中</p>
+
+    <h3>辨識文字：</h3>
+    <p id="result" style="font-size: 1.2em; color: #0056b3;"></p>
+
+    <h3>Silero VAD 語音機率 (綠線) vs Threshold (紅線)：</h3>
+    <canvas id="chart" width="600" height="150" style="background:#222; border-radius:6px;"></canvas>
+
+    <script>
+        let recorder, chunks = [];
+        const btnStart = document.getElementById('btnStart');
+        const btnStop = document.getElementById('btnStop');
+
+        btnStart.onclick = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recorder = new MediaRecorder(stream);
+            chunks = [];
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = async () => {
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                const formData = new FormData();
+                formData.append('file', blob, 'record.webm');
+                formData.append('threshold', document.getElementById('thresh').value);
+
+                document.getElementById('status').innerText = '狀態：計算 VAD 與辨識中...';
+                const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
+                const data = await res.json();
+
+                document.getElementById('status').innerText = '狀態：完成';
+                document.getElementById('result').innerText = data.text || '(未偵測到語音)';
+                drawChart(data.vad_timeline, data.threshold);
+                stream.getTracks().forEach(t => t.stop());
+            };
+            recorder.start();
+            btnStart.disabled = true; btnStop.disabled = false;
+            document.getElementById('status').innerText = '狀態：🔴 錄音中...';
+        };
+
+        btnStop.onclick = () => {
+            recorder.stop();
+            btnStart.disabled = false; btnStop.disabled = true;
+        };
+
+        function drawChart(probs, threshold) {
+            const canvas = document.getElementById('chart');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width, h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            // 繪製語音機率折線
+            ctx.beginPath();
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 2;
+            probs.forEach((p, i) => {
+                const x = (i / Math.max(1, probs.length - 1)) * w;
+                const y = h - (p * h);
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // 繪製 Threshold 門檻紅線
+            const ty = h - (threshold * h);
+            ctx.beginPath();
+            ctx.strokeStyle = '#ff4444';
+            ctx.lineWidth = 2;
+            ctx.moveTo(0, ty);
+            ctx.lineTo(w, ty);
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>
