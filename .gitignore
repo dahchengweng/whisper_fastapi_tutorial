@@ -1,0 +1,57 @@
+# Python 虛擬環境
+.venv/
+venv/
+env/
+
+# Python 編譯與快取檔案
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 本地模型與大型權重檔案 (避免推上 Git)
+models/
+localmodels/
+*.bin
+*.onnx
+*.pt
+*.pth
+*.safetensors
+
+# 測試用音訊暫存檔
+*.webm
+*.wav
+*.mp3
+*.m4a
+*.ogg
+
+# IDE 與編輯器設定
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 作業系統暫存檔
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 環境變數檔
+.env
+.env.local

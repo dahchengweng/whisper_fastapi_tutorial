@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>Whisper 語音辨識 (VAD 能量與門檻視覺化)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h2>🎙️ Whisper 語音辨識與 VAD 能量監控台</h2>
+
+    <div class="card">
+        <h3>1. VAD (語音活動檢測) 設定</h3>
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="vadFilter" checked> 
+                <strong>啟用 VAD 靜音過濾</strong>
+            </label>
+        </div>
+        <div class="control-group">
+            <label>靜音切割長度 (ms)：<span id="silenceVal">500</span> ms</label><br>
+            <input type="range" id="minSilence" min="100" max="2000" step="100" value="500">
+        </div>
+        <div class="control-group">
+            <label>VAD 判定門檻 (Threshold)：<strong id="threshVal" class="text-danger">0.5</strong></label><br>
+            <input type="range" id="threshold" min="0.1" max="0.9" step="0.05" value="0.5">
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>2. 網頁直接錄音 (即時能量 vs Threshold 門檻線)</h3>
+        <button id="recordBtn">🔴 開始錄音</button>
+        <button id="stopBtn" disabled>⏹️ 停止並辨識</button>
+        <span id="energyText" class="energy-label">即時能量：0.00</span>
+        
+        <div class="meter-container" title="紅線代表設定的 Threshold 門檻">
+            <div id="meterBar" class="meter-bar"></div>
+            <div id="thresholdLine" class="threshold-line"></div>
+        </div>
+        <small class="hint">* 紅線為設定的 Threshold 位置，能量超過紅線時條狀圖會轉為綠色</small>
+
+        <p id="status">狀態：待機中</p>
+        <audio id="audioPlayback" controls class="audio-player"></audio>
+    </div>
+
+    <div class="card">
+        <h3>3. 辨識結果與 Silero VAD 語音機率圖</h3>
+        <p><strong>完整文字：</strong> <span id="fullText" class="result-text"></span></p>
+        <p id="vadStats" class="stats-text"></p>
+        
+        <canvas id="vadChart" width="700" height="160"></canvas>
+        <small class="hint">* 綠線：後端 AI 計算的語音機率 (0~1) ｜ 紅虛線：你的 Threshold 設定值</small>
+        
+        <pre id="jsonResult">等待音訊輸入...</pre>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
